@@ -32,5 +32,5 @@ void decodeTemperatureData(LM75A_TEMP_SENSOR *temperatureSensor){
 
 
 void printTemperatureData(LM75A_TEMP_SENSOR *temperatureSensor){
-
+  Serial.println(temperatureSensor->measuredValue);
 }
