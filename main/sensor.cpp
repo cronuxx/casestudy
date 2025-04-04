@@ -23,15 +23,24 @@ int generateTemperatureData(LM75A_TEMP_SENSOR *temperatureSensor){
 
 void decodeTemperatureData(LM75A_TEMP_SENSOR *temperatureSensor){
   // Converting I2C data to real temperature data. 
-  uint16_t rawData = temperatureSensor->LSB;
-  float temperature = rawData * 0.5;
+  int16_t rawData = temperatureSensor->LSB;
+  
+  // if Most Significant Bit is 1, Temperature is negative
+  // So according to datasheet we need to apply 2's complementary.
   if (temperatureSensor->MSB == 1){
-    temperature *= -1;
+    rawData = ~rawData + 1;
   }
+  
+  float temperature = rawData * 0.5;
   temperatureSensor->measuredValue = temperature;
 };
 
 
 void printTemperatureData(LM75A_TEMP_SENSOR *temperatureSensor){
+  Serial.print("MSB: ");
+  Serial.println(temperatureSensor->MSB);
+  Serial.print("LSB: ");
+  Serial.println(temperatureSensor->LSB);
+  Serial.print("Temperature: ");
   Serial.println(temperatureSensor->measuredValue);
 }
