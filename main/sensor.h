@@ -32,18 +32,18 @@ sensor tipi enum ile seçilmeli ?
 typedef struct{
   uint8_t i2cAddress;          // 8 bit i2c device's address
   uint8_t temperatureRegister; // 8 bit i2c address of temperature register 
-  uint8_t MSB;                 // Integer part of temperature                   
-  uint8_t LSB;                 // Fractional part of temperature                
+  bool MSB;                    // Sign of the temperature           
+  uint8_t LSB;                 // Magnitude of temperature              
   float measuredValue;         // Measured sensor value
 }LM75A_TEMP_SENSOR;
 
-// Randomly generating i2c data for simulating
+// Randomly generating 9 bit i2c data for simulating
 int generateTemperatureData(LM75A_TEMP_SENSOR *temperatureSensor); 
 
 // Decoding i2c data to get real temperature
-// Formula: rawData / 256.0, since 1 bit = 0.5 Celcius
 void decodeTemperatureData(LM75A_TEMP_SENSOR *temperatureSensor);
 
+// Printing real temperature
 void printTemperatureData(LM75A_TEMP_SENSOR *temperatureSensor);
 
 // struct LM75A_TEMP_SENSOR{};

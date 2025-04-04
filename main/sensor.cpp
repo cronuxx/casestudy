@@ -11,9 +11,8 @@ int generateTemperatureData(LM75A_TEMP_SENSOR *temperatureSensor){
   }
   randomSeed(analogRead(0));
   
-  // Randomly generating 8 bit I2C data. 
-  // Result in: [0, 255]
-  uint8_t msb = random(0,255); // Generates a random number between 0 and 255
+  // Randomly generating 9 bit I2C data. 
+  uint8_t msb = random(0, 2); // Generates a random number between 0 and 1
   temperatureSensor->MSB = msb;
   
   uint8_t lsb = random(0,255);  // Generates a random number between 0 and 255
@@ -24,9 +23,11 @@ int generateTemperatureData(LM75A_TEMP_SENSOR *temperatureSensor){
 
 void decodeTemperatureData(LM75A_TEMP_SENSOR *temperatureSensor){
   // Converting I2C data to real temperature data. 
-  // Formula: rawData / 256.0. 
-  uint16_t rawData = (temperatureSensor->MSB << 8) | temperatureSensor->LSB;
-  float temperature = rawData / 256.0;
+  uint16_t rawData = temperatureSensor->LSB;
+  float temperature = rawData * 0.5;
+  if (temperatureSensor->MSB == 1){
+    temperature *= -1;
+  }
   temperatureSensor->measuredValue = temperature;
 };
 
