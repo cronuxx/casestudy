@@ -8,7 +8,8 @@
 */
 
 LM75A_TEMP_SENSOR tempSensor = {0x48, 0x00, 0, 0, 0};
-
+Si7021_A20_HUMIDITY_SENSOR humiditySensor = {0x48, 0xE5, 0, 0, 0};
+NPI_19_PRESSURE_SENSOR pressureSensor = {NPI_19_I2C_ADDRESS, 0, 0, 0, 0};
 
 void setup() {
   Serial.begin(9600);
@@ -16,9 +17,17 @@ void setup() {
 }
 
 void loop() {
+
   generateTemperatureData(&tempSensor);
   decodeTemperatureData(&tempSensor);
   printTemperatureData(&tempSensor);
 
+  generateHumidityData(&humiditySensor);
+  decodeHumidityData(&humiditySensor);
+  printHumidityData(&humiditySensor);
+
+  generatePressureData(&pressureSensor);
+  decodePressureData(&pressureSensor);
+  printPressureData(&pressureSensor);
   sleep(1);
 }
