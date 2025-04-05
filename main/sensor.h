@@ -9,11 +9,26 @@
 
 #define UFT_BUFFER_SIZE 5
 #define CT_BUFFER_SIZE  5
+#define WINDOW_SIZE     3
 
 extern float unfilteredCircularTemperatureBuffer[UFT_BUFFER_SIZE];
 extern float circularTemperatureBuffer[CT_BUFFER_SIZE];
 
-void filter_sensor_value(float *raw_sensor_value, uint8_t window_size);
+extern float unfilteredCircularHumidityBuffer[CT_BUFFER_SIZE];
+extern float circularHumidityBuffer[CT_BUFFER_SIZE];
+
+extern float unfilteredCircularPressureBuffer[CT_BUFFER_SIZE];
+extern float circularPressureBuffer[CT_BUFFER_SIZE];
+
+
+
+void bubble_sort(float arr[], int n);
+void filter_sensor_value(float *raw_sensor_value, float *filtered_value_array, uint8_t window_size);
+float findMax(float arr[], int size);
+float findMin(float arr[], int size);
+float find_median(float *unfilteredWindow, int n);
+float findStandardDeviation(float data[], int size);
+
 /*
 float i2c_sensor_read(uint8_t device_address, enum sensor_t sensor_type);
 float filter_sensor_value(float raw_sensor_value, uint8_t window_size);”

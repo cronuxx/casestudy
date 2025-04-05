@@ -6,12 +6,17 @@
 float unfilteredCircularTemperatureBuffer[] = {0, 0, 0, 0, 0};
 float circularTemperatureBuffer[] = {0, 0, 0, 0, 0};
 
+float unfilteredCircularHumidityBuffer[] = {0, 0, 0, 0, 0};
+float circularHumidityBuffer[] = {0, 0, 0, 0, 0};
+
+float unfilteredCircularPressureBuffer[] = {0, 0, 0, 0, 0};
+float circularPressureBuffer[] = {0, 0, 0, 0, 0};
 
 void bubble_sort(float arr[], int n) {
     for (int i = 0; i < n-1; i++) {
         for (int j = 0; j < n-1-i; j++) {
             if (arr[j] > arr[j+1]) {
-                int temp = arr[j];
+                float temp = arr[j];  // float olarak değiştir
                 arr[j] = arr[j+1];
                 arr[j+1] = temp;
             }
@@ -19,6 +24,26 @@ void bubble_sort(float arr[], int n) {
     }
 }
 
+
+float findMax(float arr[], int size) {
+  float maxVal = arr[0];
+  for (int i = 1; i < size; i++) {
+    if (arr[i] > maxVal) {
+      maxVal = arr[i];
+    }
+  }
+  return maxVal;
+}
+
+float findMin(float arr[], int size) {
+  float minVal = arr[0];
+  for (int i = 1; i < size; i++) {
+    if (arr[i] < minVal) {
+      minVal = arr[i];
+    }
+  }
+  return minVal;
+}
 
 float find_median(float *unfilteredWindow, int n){
     bubble_sort(unfilteredWindow, n);
@@ -33,8 +58,21 @@ float find_median(float *unfilteredWindow, int n){
   // return median
 };
 
+float findStandardDeviation(float data[], int size) {
+  float sum = 0;
+  for (int i = 0; i < size; i++) {
+    sum += data[i];
+  }
+  float mean = sum / size;  // Median yerine ortalama kullanılmalı
+  float sumSqDiff = 0;
+  for (int i = 0; i < size; i++) {
+    sumSqDiff += (data[i] - mean) * (data[i] - mean);
+  }
+  return sqrt(sumSqDiff / size);  // Population std dev
+  // use sqrt(sumSqDiff / (size - 1)) for sample std dev
+}
 
-void filter_sensor_value(float *raw_sensor_value, uint8_t window_size){
+void filter_sensor_value(float *raw_sensor_value, float *filtered_value_array, uint8_t window_size){
 
   float temporaryWindow[window_size];
 
@@ -48,17 +86,22 @@ void filter_sensor_value(float *raw_sensor_value, uint8_t window_size){
       if (windowLocation >= CT_BUFFER_SIZE){
         windowLocation = CT_BUFFER_SIZE - 1;
       }
+
       temporaryWindow[j] = *(raw_sensor_value + windowLocation);
+    
     }
-    circularTemperatureBuffer[i] = find_median(temporaryWindow, window_size);
+    filtered_value_array[i] = find_median(temporaryWindow, window_size);
   }
 };
 
 
 
+
 // TEMPERATURE SENSOR 
 
-int bufferLocation = 0;
+uint8_t temperatureBufferLocation = 0;
+uint8_t humidityBufferLocation = 0;
+uint8_t pressureBufferLocation = 0;
 
 int generateTemperatureData(LM75A_TEMP_SENSOR *temperatureSensor){
 
@@ -92,14 +135,14 @@ int generateTemperatureData(LM75A_TEMP_SENSOR *temperatureSensor){
   }
   
   // Inserting unfiltered data to unfiltered circular buffer
-  if (bufferLocation < UFT_BUFFER_SIZE){
-    unfilteredCircularTemperatureBuffer[bufferLocation] = temperatureSensor->measuredValue;
-    bufferLocation++;
+  if (temperatureBufferLocation < UFT_BUFFER_SIZE){
+    unfilteredCircularTemperatureBuffer[temperatureBufferLocation] = temperatureSensor->measuredValue;
+    temperatureBufferLocation++;
   }
-  else if(bufferLocation == UFT_BUFFER_SIZE){
-    bufferLocation = 0;
-    unfilteredCircularTemperatureBuffer[bufferLocation] = temperatureSensor->measuredValue;
-    bufferLocation++;
+  else if(temperatureBufferLocation == UFT_BUFFER_SIZE){
+    temperatureBufferLocation = 0;
+    unfilteredCircularTemperatureBuffer[temperatureBufferLocation] = temperatureSensor->measuredValue;
+    temperatureBufferLocation++;
   }
 
 
@@ -146,6 +189,8 @@ int generateHumidityData(Si7021_A20_HUMIDITY_SENSOR *humiditySensor){
   uint8_t lsb = random(0,256);  // Generates a random number between 0 and 255
   humiditySensor->LSB = lsb;
 
+  
+
   return 0;
 };
 
@@ -158,6 +203,18 @@ void decodeHumidityData(Si7021_A20_HUMIDITY_SENSOR *humiditySensor){
   uint16_t rawHumidity = (uint16_t) humiditySensor->MSB << 8 |  humiditySensor->MSB;
   float relativeHumidity = (125 * rawHumidity / 65536) - 6;
   humiditySensor->measuredValue = relativeHumidity;   
+
+  // Inserting unfiltered data to unfiltered circular buffer
+  if (humidityBufferLocation < UFT_BUFFER_SIZE){
+    unfilteredCircularHumidityBuffer[humidityBufferLocation] = humiditySensor->measuredValue;
+    humidityBufferLocation++;
+  }
+  else if(humidityBufferLocation == UFT_BUFFER_SIZE){
+    humidityBufferLocation = 0;
+    unfilteredCircularHumidityBuffer[humidityBufferLocation] = humiditySensor->measuredValue;
+    humidityBufferLocation++;
+  }
+
 
   /*
   Due to normal variations in RH accuracy of the device as described in Table 4, it is possible for the measured value
@@ -199,6 +256,17 @@ void decodePressureData(NPI_19_PRESSURE_SENSOR *pressureSensor){
   uint16_t rawPressure = (uint16_t) pressureSensor->MSB << 6 |  pressureSensor->LSB;
   float pressurePsi = (rawPressure - 1638.0) * 30.0 / (14745 - 1638);
   pressureSensor->measuredValue = pressurePsi;   
+
+    // Inserting unfiltered data to unfiltered circular buffer
+  if (pressureBufferLocation < UFT_BUFFER_SIZE){
+    unfilteredCircularPressureBuffer[pressureBufferLocation] = pressureSensor->measuredValue;
+    pressureBufferLocation++;
+  }
+  else if(pressureBufferLocation == UFT_BUFFER_SIZE){
+    pressureBufferLocation = 0;
+    unfilteredCircularPressureBuffer[pressureBufferLocation] = pressureSensor->measuredValue;
+    pressureBufferLocation++;
+  }
 
 };
 
