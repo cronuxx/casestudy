@@ -7,27 +7,54 @@
 4- Bluetooth ile data gönder (30 Sn)
 */
 
-LM75A_TEMP_SENSOR tempSensor = {0x48, 0x00, 0, 0, 0};
-Si7021_A20_HUMIDITY_SENSOR humiditySensor = {0x48, 0xE5, 0, 0, 0};
+LM75A_TEMP_SENSOR tempSensor = {LM75A_I2C_ADDRESS, 0x00, 0, 0, 0};
+Si7021_A20_HUMIDITY_SENSOR humiditySensor = {Si7021_A20_I2C_ADDRESS, 0xE5, 0, 0, 0};
 NPI_19_PRESSURE_SENSOR pressureSensor = {NPI_19_I2C_ADDRESS, 0, 0, 0, 0};
 
-void setup() {
+
+
+
+void setup(){
+
   Serial.begin(9600);
+
+
+  
   // put your setup code here, to run once:
 }
 
 void loop() {
 
   generateTemperatureData(&tempSensor);
-  decodeTemperatureData(&tempSensor);
+  // decodeTemperatureData(&tempSensor);
   printTemperatureData(&tempSensor);
+  filter_sensor_value(unfilteredCircularTemperatureBuffer, 3);
 
-  generateHumidityData(&humiditySensor);
-  decodeHumidityData(&humiditySensor);
-  printHumidityData(&humiditySensor);
+  for (int i = 0; i < UFT_BUFFER_SIZE; i++){
+    Serial.print(unfilteredCircularTemperatureBuffer[i]);
+    Serial.print(" ");
+  }
+  Serial.println();
 
-  generatePressureData(&pressureSensor);
-  decodePressureData(&pressureSensor);
-  printPressureData(&pressureSensor);
+  for (int i = 0; i < UFT_BUFFER_SIZE; i++){
+    Serial.print(circularTemperatureBuffer[i]);
+    Serial.print(" ");
+  }
+  Serial.println();
+
+
+  // for (int i = 0; i < UFT_BUFFER_SIZE; i++){
+  //   Serial.print(circularTemperatureBuffer[i]);
+  //   Serial.print(" ");
+  // }
+  // Serial.println();
+
+  // generateHumidityData(&humiditySensor);
+  // decodeHumidityData(&humiditySensor);
+  // printHumidityData(&humiditySensor);
+
+  // generatePressureData(&pressureSensor);
+  // decodePressureData(&pressureSensor);
+  // printPressureData(&pressureSensor);
   sleep(1);
 }

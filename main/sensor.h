@@ -7,16 +7,21 @@
 #define Si7021_A20_HUMIDITY_REGISTER     0xE5
 #define NPI_19_I2C_ADDRESS               0x28
 
-/*
-3 farklı sensör tanımla
-bunların adresleri olsun
+#define UFT_BUFFER_SIZE 5
+#define CT_BUFFER_SIZE  5
 
+extern float unfilteredCircularTemperatureBuffer[UFT_BUFFER_SIZE];
+extern float circularTemperatureBuffer[CT_BUFFER_SIZE];
+
+void filter_sensor_value(float *raw_sensor_value, uint8_t window_size);
+/*
 float i2c_sensor_read(uint8_t device_address, enum sensor_t sensor_type);
 float filter_sensor_value(float raw_sensor_value, uint8_t window_size);”
 int buffer_get_value(struct buf_handle_t *p_handle, float *p_sensor_data);”. (Returns 0 on success)
-
-sensor tipi enum ile seçilmeli ?
 */
+
+
+
 
 /*
 

@@ -1,22 +1,107 @@
 #include <Arduino.h>
 #include <sensor.h>
 
+// SENSOR FILTER DATA 
+
+float unfilteredCircularTemperatureBuffer[] = {0, 0, 0, 0, 0};
+float circularTemperatureBuffer[] = {0, 0, 0, 0, 0};
+
+
+void bubble_sort(float arr[], int n) {
+    for (int i = 0; i < n-1; i++) {
+        for (int j = 0; j < n-1-i; j++) {
+            if (arr[j] > arr[j+1]) {
+                int temp = arr[j];
+                arr[j] = arr[j+1];
+                arr[j+1] = temp;
+            }
+        }
+    }
+}
+
+
+float find_median(float *unfilteredWindow, int n){
+    bubble_sort(unfilteredWindow, n);
+
+    if (n % 2 == 1) {
+        return unfilteredWindow[n / 2]; // Tek elemanlı ise ortadaki eleman
+    } else {
+        return (unfilteredWindow[n/2 - 1] + unfilteredWindow[n/2]) / 2.0; // Çiftse ortadaki iki elemanın ortalaması
+    }
+  // use bubble sort
+  // find median
+  // return median
+};
+
+
+void filter_sensor_value(float *raw_sensor_value, uint8_t window_size){
+
+  float temporaryWindow[window_size];
+
+  for (int i = 0; i < CT_BUFFER_SIZE; i++){
+    for (int j = 0; j < window_size; j++){
+      
+      int windowLocation = i - 1 + j;
+      if (windowLocation < 0){
+        windowLocation = 0;
+      }
+      if (windowLocation >= CT_BUFFER_SIZE){
+        windowLocation = CT_BUFFER_SIZE - 1;
+      }
+      temporaryWindow[j] = *(raw_sensor_value + windowLocation);
+    }
+    circularTemperatureBuffer[i] = find_median(temporaryWindow, window_size);
+  }
+};
+
+
+
 // TEMPERATURE SENSOR 
+
+int bufferLocation = 0;
+
 int generateTemperatureData(LM75A_TEMP_SENSOR *temperatureSensor){
 
   // Checking if user wants to read data from correct register address. 
-  if (temperatureSensor->temperatureRegister != LM75A_TEMPERATURE_REGISTER){
-    // return false conditiong if user trying to access wrong register. 
-    return -1; 
-  }
-  randomSeed(analogRead(0));
-  
+  // if (temperatureSensor->temperatureRegister != LM75A_TEMPERATURE_REGISTER){
+  //   // return false conditiong if user trying to access wrong register. 
+  //   return -1; 
+  // }
+  // randomSeed(analogRead(0));
+
   // Randomly generating 9 bit I2C data. 
-  uint8_t msb = random(0, 2); // Generates a random number between 0 and 1
-  temperatureSensor->MSB = msb;
+  // uint8_t msb = random(0, 2); // Generates a random number between 0 and 1
+  // temperatureSensor->MSB = msb;
+  // uint8_t lsb = random(0, 255);  // Generates a random number between 0 and 255
+  // temperatureSensor->LSB = lsb;
+
+  // For seeing effect of filtering process, Program will generate degree between 
+  // 23 to 28 degree and randomly it will generate random noise effect such as -10 degree or 50 degree.
+
+  temperatureSensor->measuredValue = random(22,29);
+  temperatureSensor->measuredValue += random(0,10) * 0.1;
+
+  // %20 possibilty to generate random noise
+  if (random(1,6) == 1){
+    if (random(0,2) == 1){
+      temperatureSensor->measuredValue -= 20;
+    }
+    else{
+      temperatureSensor->measuredValue += 20;
+    }
+  }
   
-  uint8_t lsb = random(0,256);  // Generates a random number between 0 and 255
-  temperatureSensor->LSB = lsb;
+  // Inserting unfiltered data to unfiltered circular buffer
+  if (bufferLocation < UFT_BUFFER_SIZE){
+    unfilteredCircularTemperatureBuffer[bufferLocation] = temperatureSensor->measuredValue;
+    bufferLocation++;
+  }
+  else if(bufferLocation == UFT_BUFFER_SIZE){
+    bufferLocation = 0;
+    unfilteredCircularTemperatureBuffer[bufferLocation] = temperatureSensor->measuredValue;
+    bufferLocation++;
+  }
+
 
   return 0;
 }; 
@@ -37,10 +122,6 @@ void decodeTemperatureData(LM75A_TEMP_SENSOR *temperatureSensor){
 
 
 void printTemperatureData(LM75A_TEMP_SENSOR *temperatureSensor){
-  Serial.print("MSB: ");
-  Serial.println(temperatureSensor->MSB);
-  Serial.print("LSB: ");
-  Serial.println(temperatureSensor->LSB);
   Serial.print("Temperature: ");
   Serial.println(temperatureSensor->measuredValue);
 };
