@@ -17,6 +17,9 @@ float maxTemperature, medianTemperature, minTemperature, standartDevTemp;
 float maxHumidity, medianHumidity, minHumidity, standartDevHumidity;
 float maxPressure, medianPressure, minPressure, standartDevPressure;
 
+int BLE_advertisement_interval = 30;
+int timeCounter = 0;
+
 String result;
 
 void setup(){
@@ -26,6 +29,7 @@ void setup(){
 }
 
 void loop() {
+  timeCounter++;
 
   generateTemperatureData(&tempSensor);
   // decodeTemperatureData(&tempSensor);
@@ -108,11 +112,10 @@ void loop() {
 
   const char* resultCStr = result.c_str();
 
-    // notify changed value
-  if (deviceConnected) {
+  // notify changed value
+  if (deviceConnected && timeCounter == 30) {
     pCharacteristic->setValue((uint8_t *)resultCStr, strlen(resultCStr));    pCharacteristic->notify();
-    value++;
-    delay(500);
+    timeCounter = 0;
   }
   // disconnecting
   if (!deviceConnected && oldDeviceConnected) {
@@ -127,9 +130,7 @@ void loop() {
     oldDeviceConnected = deviceConnected;
   }
 
-
   // Serial.println(result);
-
   sleep(1);
 }
 
