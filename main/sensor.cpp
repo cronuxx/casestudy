@@ -24,7 +24,6 @@ void bubble_sort(float arr[], int n) {
     }
 }
 
-
 float findMax(float arr[], int size) {
   float maxVal = arr[0];
   for (int i = 1; i < size; i++) {

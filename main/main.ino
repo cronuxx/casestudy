@@ -1,4 +1,5 @@
 #include <sensor.h>
+#include <server.h>
 
 /*
 1- Sensörlerden veriyi oku (1 Hz)
@@ -11,14 +12,16 @@ LM75A_TEMP_SENSOR tempSensor = {LM75A_I2C_ADDRESS, 0x00, 0, 0, 0};
 Si7021_A20_HUMIDITY_SENSOR humiditySensor = {Si7021_A20_I2C_ADDRESS, 0xE5, 0, 0, 0};
 NPI_19_PRESSURE_SENSOR pressureSensor = {NPI_19_I2C_ADDRESS, 0, 0, 0, 0};
 
+
 float maxTemperature, medianTemperature, minTemperature, standartDevTemp;
 float maxHumidity, medianHumidity, minHumidity, standartDevHumidity;
 float maxPressure, medianPressure, minPressure, standartDevPressure;
 
-
+String result;
 
 void setup(){
   Serial.begin(9600);
+  serverSetup();
   // put your setup code here, to run once:
 }
 
@@ -39,50 +42,48 @@ void loop() {
   printPressureData(&pressureSensor);
   filter_sensor_value(unfilteredCircularPressureBuffer, circularPressureBuffer, WINDOW_SIZE);
 
-  Serial.println("----------UNFILTERED TEMPERATUR----------");
-  for (int i = 0; i < UFT_BUFFER_SIZE; i++){
-    Serial.print(unfilteredCircularTemperatureBuffer[i]);
-    Serial.print(" ");
-  }
-  Serial.println();
+  // Serial.println("----------UNFILTERED TEMPERATUR----------");
+  // for (int i = 0; i < UFT_BUFFER_SIZE; i++){
+  //   Serial.print(unfilteredCircularTemperatureBuffer[i]);
+  //   Serial.print(" ");
+  // }
+  // Serial.println();
 
-  Serial.println("----------FILTERED TEMPERATURE----------");
-  for (int i = 0; i < UFT_BUFFER_SIZE; i++){
-    Serial.print(circularTemperatureBuffer[i]);
-    Serial.print(" ");
-  }
-  Serial.println();
+  // Serial.println("----------FILTERED TEMPERATURE----------");
+  // for (int i = 0; i < UFT_BUFFER_SIZE; i++){
+  //   Serial.print(circularTemperatureBuffer[i]);
+  //   Serial.print(" ");
+  // }
+  // Serial.println();
 
-  // ////////////////////
-  Serial.println("----------UNFILTERED HUMIDITY----------");
-  for (int i = 0; i < UFT_BUFFER_SIZE; i++){
-    Serial.print(unfilteredCircularHumidityBuffer[i]);
-    Serial.print(" ");
-  }
-  Serial.println();
+  // // ////////////////////
+  // Serial.println("----------UNFILTERED HUMIDITY----------");
+  // for (int i = 0; i < UFT_BUFFER_SIZE; i++){
+  //   Serial.print(unfilteredCircularHumidityBuffer[i]);
+  //   Serial.print(" ");
+  // }
+  // Serial.println();
 
-  Serial.println("----------FILTERED HUMIDITY----------");
-  for (int i = 0; i < UFT_BUFFER_SIZE; i++){
-    Serial.print(circularHumidityBuffer[i]);
-    Serial.print(" ");
-  }
-  Serial.println();
-  /////////////////////
-  Serial.println("----------UNFILTERED PRESSURE----------");
-  for (int i = 0; i < UFT_BUFFER_SIZE; i++){
-    Serial.print(unfilteredCircularPressureBuffer[i]);
-    Serial.print(" ");
-  }
-  Serial.println();
-  Serial.println("----------FILTERED PRESSURE----------");
-  for (int i = 0; i < UFT_BUFFER_SIZE; i++){
-    Serial.print(circularPressureBuffer[i]);
-    Serial.print(" ");
-  }
-  Serial.println();
-  Serial.println();
-
-
+  // Serial.println("----------FILTERED HUMIDITY----------");
+  // for (int i = 0; i < UFT_BUFFER_SIZE; i++){
+  //   Serial.print(circularHumidityBuffer[i]);
+  //   Serial.print(" ");
+  // }
+  // Serial.println();
+  // /////////////////////
+  // Serial.println("----------UNFILTERED PRESSURE----------");
+  // for (int i = 0; i < UFT_BUFFER_SIZE; i++){
+  //   Serial.print(unfilteredCircularPressureBuffer[i]);
+  //   Serial.print(" ");
+  // }
+  // Serial.println();
+  // Serial.println("----------FILTERED PRESSURE----------");
+  // for (int i = 0; i < UFT_BUFFER_SIZE; i++){
+  //   Serial.print(circularPressureBuffer[i]);
+  //   Serial.print(" ");
+  // }
+  // Serial.println();
+  // Serial.println();
 
 
   maxTemperature = findMax(circularTemperatureBuffer, CT_BUFFER_SIZE);
@@ -90,46 +91,44 @@ void loop() {
   minTemperature = findMin(circularTemperatureBuffer, CT_BUFFER_SIZE);
   standartDevTemp = findStandardDeviation(circularTemperatureBuffer, CT_BUFFER_SIZE);
 
-  Serial.print("Max Temperature: ");
-  Serial.println(maxTemperature);
-  Serial.print("Median Temperature: ");
-  Serial.println(medianTemperature);
-  Serial.print("Min Temperature: ");
-  Serial.println(minTemperature);
-  Serial.print("Standart Deviation of Temperature: ");
-  Serial.println(standartDevTemp);
-
-  Serial.println();
-
   maxHumidity = findMax(circularHumidityBuffer, CT_BUFFER_SIZE);
   medianHumidity = find_median(circularHumidityBuffer, CT_BUFFER_SIZE);
   minHumidity = findMin(circularHumidityBuffer, CT_BUFFER_SIZE);
   standartDevHumidity = findStandardDeviation(circularHumidityBuffer, CT_BUFFER_SIZE);
-
-  Serial.print("Max Humidity: ");
-  Serial.println(maxHumidity);
-  Serial.print("Median Humidity: ");
-  Serial.println(medianHumidity);
-  Serial.print("Min Humidity: ");
-  Serial.println(minHumidity);
-  Serial.print("Standart Deviation of Humidity: ");
-  Serial.println(standartDevHumidity);
-
-  Serial.println();
 
   maxPressure = findMax(circularPressureBuffer, CT_BUFFER_SIZE);
   medianPressure = find_median(circularPressureBuffer, CT_BUFFER_SIZE);
   minPressure = findMin(circularPressureBuffer, CT_BUFFER_SIZE);
   standartDevPressure = findStandardDeviation(circularPressureBuffer, CT_BUFFER_SIZE);
 
-  Serial.print("Max Pressure: ");
-  Serial.println(maxPressure);
-  Serial.print("Median Pressure: ");
-  Serial.println(medianPressure);
-  Serial.print("Min Pressure: ");
-  Serial.println(minPressure);
-  Serial.print("Standart Deviation of Pressure: ");
-  Serial.println(standartDevPressure);
+  result = "MaxTemp: " + String(maxTemperature, 2) + " MinTemp: " + String(minTemperature, 2) + " MedianTemp: " + String(medianTemperature, 2) + " StdDevTemp: " + String(standartDevTemp, 2) +
+            "\nMinHum: " + String(maxHumidity, 2) + " MinHum: " + String(minHumidity, 2) + " MedianHum: " + String(medianHumidity, 2) + " StdDevHum: " + String(standartDevHumidity, 2) +
+            "\nMinPress: " + String(maxPressure, 2) + " MinPress: " + String(minPressure, 2) + " MedianPress: " + String(medianPressure, 2) + " StdDevPress: " + String(standartDevPressure, 2)
+  ;
+
+  const char* resultCStr = result.c_str();
+
+    // notify changed value
+  if (deviceConnected) {
+    pCharacteristic->setValue((uint8_t *)resultCStr, strlen(resultCStr));    pCharacteristic->notify();
+    value++;
+    delay(500);
+  }
+  // disconnecting
+  if (!deviceConnected && oldDeviceConnected) {
+    delay(500);                   // give the bluetooth stack the chance to get things ready
+    pServer->startAdvertising();  // restart advertising
+    Serial.println("start advertising");
+    oldDeviceConnected = deviceConnected;
+  }
+  // connecting
+  if (deviceConnected && !oldDeviceConnected) {
+    // do stuff here on connecting
+    oldDeviceConnected = deviceConnected;
+  }
+
+
+  // Serial.println(result);
 
   sleep(1);
 }
